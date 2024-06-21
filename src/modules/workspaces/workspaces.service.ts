@@ -1,26 +1,55 @@
-import { Injectable } from '@nestjs/common';
-import { CreateWorkspaceDto } from './dto/create-workspace.dto';
-import { UpdateWorkspaceDto } from './dto/update-workspace.dto';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Workspace } from '../../shared/entities/index-entities';
+import { CreateWorkspaceDto } from '../../shared/dtos/index-dtos';
 
 @Injectable()
-export class WorkspacesService {
-  create(createWorkspaceDto: CreateWorkspaceDto) {
-    return 'This action adds a new workspace';
+export class WorkspaceService {
+  constructor(
+    @InjectRepository(Workspace)
+    private readonly workspaceRepository: Repository<Workspace>,
+  ) {}
+
+  async create(createWorkspaceDto: CreateWorkspaceDto): Promise<Workspace> {
+    const workspace = this.workspaceRepository.create(createWorkspaceDto);
+    return await this.workspaceRepository.save(workspace);
   }
 
-  findAll() {
-    return `This action returns all workspaces`;
+  async findAll(): Promise<Workspace[]> {
+    return await this.workspaceRepository.find({ relations: ['reservations'] });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} workspace`;
+  async findOne(id: number): Promise<Workspace> {
+    const workspace = await this.workspaceRepository.findOne({
+      where: { id },
+      relations: ['reservations'],
+    });
+    if (!workspace) {
+      throw new NotFoundException(`Workspace's id ${id} is not found`);
+    }
+    return workspace;
   }
 
-  update(id: number, updateWorkspaceDto: UpdateWorkspaceDto) {
-    return `This action updates a #${id} workspace`;
+  async update(
+    id: number,
+    updateWorkspaceDto: CreateWorkspaceDto,
+  ): Promise<Workspace> {
+    const workspace = await this.workspaceRepository.preload({
+      id,
+      ...updateWorkspaceDto,
+    });
+    if (!workspace) {
+      throw new NotFoundException(`Workspace's id ${id} is not found`);
+    }
+    return await this.workspaceRepository.save(workspace);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} workspace`;
+  async remove(id: number): Promise<void> {
+    const workspace = await this.workspaceRepository.findOne({ where: { id } });
+    if (!workspace) {
+      throw new NotFoundException(`Workspace's id ${id} is not found`);
+    }
+    await this.workspaceRepository.softRemove(workspace);
   }
 }
