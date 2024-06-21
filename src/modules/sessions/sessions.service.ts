@@ -53,17 +53,17 @@ export class SessionService {
     await this.sessionRepository.softRemove(session);
   }
 
-  async getMostBookedSessions(): Promise<Session[]> {
+  async getMostBookedSessions(): Promise<any> {
     const queryBuilder = this.sessionRepository.createQueryBuilder('session');
 
     queryBuilder
-      .loadRelationCountAndMap(
-        'session.reservationsCount',
-        'session.reservations',
-      )
-      .orderBy('session.reservationsCount', 'DESC');
+      .leftJoin('session.reservations', 'reservation')
+      .addSelect('session.id', 'sessionId') // Seleccionamos session.id para agrupar por él
+      .addSelect('COUNT(reservation.id)', 'reservationscount')
+      .groupBy('session.id')
+      .orderBy('reservationscount', 'DESC');
 
-    return await queryBuilder.getMany();
+    return await queryBuilder.getRawMany();
   }
 
   async getMostAvailableSessions(): Promise<Session[]> {
@@ -75,8 +75,7 @@ export class SessionService {
       .orderBy(
         'COUNT(CASE WHEN reservation.deletedAt IS NULL THEN reservation.id END)',
         'ASC',
-      )
-      .getMany();
+      );
 
     return await queryBuilder.getMany();
   }

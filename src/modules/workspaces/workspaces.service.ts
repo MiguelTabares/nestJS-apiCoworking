@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Workspace } from '../../shared/entities/index-entities';
+import { Room, Workspace } from '../../shared/entities/index-entities';
 import { CreateWorkspaceDto } from '../../shared/dtos/index-dtos';
 
 @Injectable()
@@ -9,6 +9,8 @@ export class WorkspaceService {
   constructor(
     @InjectRepository(Workspace)
     private readonly workspaceRepository: Repository<Workspace>,
+    @InjectRepository(Room)
+    private readonly roomRepository: Repository<Room>,
   ) {}
 
   async create(createWorkspaceDto: CreateWorkspaceDto): Promise<Workspace> {
@@ -57,12 +59,18 @@ export class WorkspaceService {
     roomId: number,
     sessionId: number,
   ): Promise<Workspace[]> {
-    const queryBuilder = this.workspaceRepository
-      .createQueryBuilder('workspace')
+    const queryBuilder =
+      this.workspaceRepository.createQueryBuilder('workspace');
+
+    queryBuilder
       .leftJoin('workspace.reservations', 'reservation')
-      .where('reservation.room.id = :roomId', { roomId })
-      .andWhere('reservation.session.id = :sessionId', { sessionId })
-      .andWhere('reservation.deletedAt IS NULL');
+      .leftJoin('workspace.room', 'room')
+      .where('room.id = :roomId', { roomId })
+      .andWhere(
+        '(reservation.sessionId IS NULL OR reservation.sessionId != :sessionId)',
+        { sessionId },
+      )
+      .andWhere('workspace.room = :roomId', { roomId });
 
     return await queryBuilder.getMany();
   }

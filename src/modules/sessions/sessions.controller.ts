@@ -15,6 +15,16 @@ import { Session } from '../../shared/entities/index-entities';
 export class SessionController {
   constructor(private readonly sessionService: SessionService) {}
 
+  @Get('most-booked')
+  async getMostBookedSessions() {
+    return this.sessionService.getMostBookedSessions();
+  }
+
+  @Get('most-available')
+  async getMostAvailableSessions() {
+    return this.sessionService.getMostAvailableSessions();
+  }
+
   @Post()
   create(@Body() createSessionDto: CreateSessionDto): Promise<Session> {
     return this.sessionService.create(createSessionDto);
@@ -41,15 +51,5 @@ export class SessionController {
   @Delete(':id')
   remove(@Param('id') id: number): Promise<void> {
     return this.sessionService.remove(id);
-  }
-
-  @Get('most-booked')
-  async getMostBookedSessions() {
-    return this.sessionService.getMostBookedSessions();
-  }
-
-  @Get('most-available')
-  async getMostAvailableSessions() {
-    return this.sessionService.getMostAvailableSessions();
   }
 }
