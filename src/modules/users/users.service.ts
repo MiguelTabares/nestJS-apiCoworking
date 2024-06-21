@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, SelectQueryBuilder } from 'typeorm';
 import { User } from '../../shared/entities/index-entities';
 import { CreateUserDto } from '../../shared/dtos/index-dtos';
 
@@ -17,16 +17,18 @@ export class UserService {
   }
 
   async findAll(): Promise<User[]> {
-    return await this.userRepository.find({ relations: ['reservations'] });
+    const queryBuilder = this.userRepository.createQueryBuilder('user');
+    this.addRelationsToQueryBuilder(queryBuilder);
+    return await queryBuilder.getMany();
   }
 
   async findOne(id: number): Promise<User> {
-    const user = await this.userRepository.findOne({
-      where: { id },
-      relations: ['reservations'],
-    });
+    const queryBuilder = this.userRepository.createQueryBuilder('user');
+    this.addRelationsToQueryBuilder(queryBuilder);
+    queryBuilder.where('user.id = :id', { id });
+    const user = await queryBuilder.getOne();
     if (!user) {
-      throw new NotFoundException(`User's ID ${id} not found`);
+      throw new NotFoundException(`User's' ID ${id} not found`);
     }
     return user;
   }
@@ -37,7 +39,7 @@ export class UserService {
       ...updateUserDto,
     });
     if (!user) {
-      throw new NotFoundException(`User's ID ${id} not found`);
+      throw new NotFoundException(`User's' ID ${id} not found`);
     }
     return await this.userRepository.save(user);
   }
@@ -45,8 +47,15 @@ export class UserService {
   async remove(id: number): Promise<void> {
     const user = await this.userRepository.findOne({ where: { id } });
     if (!user) {
-      throw new NotFoundException(`User's ID ${id} not found`);
+      throw new NotFoundException(`User's' ID ${id} not found`);
     }
     await this.userRepository.softRemove(user);
+  }
+
+  private addRelationsToQueryBuilder(
+    queryBuilder: SelectQueryBuilder<User>,
+  ): void {
+    queryBuilder.leftJoinAndSelect('user.reservations', 'reservation');
+    queryBuilder.leftJoinAndSelect('user.workspaces', 'workspace');
   }
 }

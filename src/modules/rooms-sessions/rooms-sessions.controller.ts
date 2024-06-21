@@ -1,6 +1,6 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Controller, Get, Param, NotFoundException } from '@nestjs/common';
 import { RoomsSessionsService } from './rooms-sessions.service';
-import { Workspace } from 'src/shared/entities/workspace.entity';
+import { Workspace } from '../../shared/entities/workspace.entity';
 
 @Controller('rooms-sessions')
 export class RoomsSessionsController {
@@ -10,8 +10,19 @@ export class RoomsSessionsController {
   async getAvailableWorkspaces(
     @Param('roomId') roomId: number,
     @Param('sessionId') sessionId: number,
-  ) {
-    return this.service.getAvailableWorkspaces(roomId, sessionId);
+  ): Promise<Workspace[]> {
+    try {
+      const availableWorkspaces = await this.service.getAvailableWorkspaces(
+        roomId,
+        sessionId,
+      );
+      return availableWorkspaces;
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw new NotFoundException(error.message);
+      }
+      throw error; // Throw other errors as-is
+    }
   }
 
   @Get(':roomId/:sessionId/occupied-workspaces')
@@ -19,6 +30,14 @@ export class RoomsSessionsController {
     @Param('roomId') roomId: number,
     @Param('sessionId') sessionId: number,
   ): Promise<Workspace[]> {
-    return this.service.getOccupiedWorkspaces(roomId, sessionId);
+    try {
+      const occupiedWorkspaces = await this.service.getOccupiedWorkspaces(
+        roomId,
+        sessionId,
+      );
+      return occupiedWorkspaces;
+    } catch (error) {
+      throw error;
+    }
   }
 }

@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, SelectQueryBuilder } from 'typeorm';
 import { Session } from '../../shared/entities/index-entities';
 import { CreateSessionDto } from '../../shared/dtos/index-dtos';
 
@@ -17,14 +17,16 @@ export class SessionService {
   }
 
   async findAll(): Promise<Session[]> {
-    return await this.sessionRepository.find({ relations: ['reservations'] });
+    const queryBuilder = this.sessionRepository.createQueryBuilder('session');
+    this.addRelationsToQueryBuilder(queryBuilder);
+    return await queryBuilder.getMany();
   }
 
   async findOne(id: number): Promise<Session> {
-    const session = await this.sessionRepository.findOne({
-      where: { id },
-      relations: ['reservations'],
-    });
+    const queryBuilder = this.sessionRepository.createQueryBuilder('session');
+    this.addRelationsToQueryBuilder(queryBuilder);
+    queryBuilder.where('session.id = :id', { id });
+    const session = await queryBuilder.getOne();
     if (!session) {
       throw new NotFoundException(`Session's ID ${id} not found`);
     }
@@ -58,7 +60,7 @@ export class SessionService {
 
     queryBuilder
       .leftJoin('session.reservations', 'reservation')
-      .addSelect('session.id', 'sessionId') // Seleccionamos session.id para agrupar por él
+      .addSelect('session.id', 'sessionId')
       .addSelect('COUNT(reservation.id)', 'reservationscount')
       .groupBy('session.id')
       .orderBy('reservationscount', 'DESC');
@@ -78,5 +80,12 @@ export class SessionService {
       );
 
     return await queryBuilder.getMany();
+  }
+
+  private addRelationsToQueryBuilder(
+    queryBuilder: SelectQueryBuilder<Session>,
+  ): void {
+    queryBuilder.leftJoinAndSelect('session.reservations', 'reservation');
+    queryBuilder.leftJoinAndSelect('session.workspaces', 'workspace');
   }
 }

@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, SelectQueryBuilder } from 'typeorm';
 import { Reservation } from '../../shared/entities/index-entities';
 import { CreateReservationDto } from '../../shared/dtos/index-dtos';
 
@@ -19,16 +19,18 @@ export class ReservationService {
   }
 
   async findAll(): Promise<Reservation[]> {
-    return await this.reservationRepository.find({
-      relations: ['workspace', 'session', 'user'],
-    });
+    const queryBuilder =
+      this.reservationRepository.createQueryBuilder('reservation');
+    this.addRelationsToQueryBuilder(queryBuilder);
+    return await queryBuilder.getMany();
   }
 
   async findOne(id: number): Promise<Reservation> {
-    const reservation = await this.reservationRepository.findOne({
-      where: { id },
-      relations: ['workspace', 'session', 'user'],
-    });
+    const queryBuilder =
+      this.reservationRepository.createQueryBuilder('reservation');
+    this.addRelationsToQueryBuilder(queryBuilder);
+    queryBuilder.where('reservation.id = :id', { id });
+    const reservation = await queryBuilder.getOne();
     if (!reservation) {
       throw new NotFoundException(`Reservation's ID ${id} not found`);
     }
@@ -57,5 +59,14 @@ export class ReservationService {
       throw new NotFoundException(`Reservation's ID ${id} not found`);
     }
     await this.reservationRepository.softRemove(reservation);
+  }
+
+  private addRelationsToQueryBuilder(
+    queryBuilder: SelectQueryBuilder<Reservation>,
+  ): void {
+    queryBuilder
+      .leftJoinAndSelect('reservation.workspace', 'workspace')
+      .leftJoinAndSelect('reservation.session', 'session')
+      .leftJoinAndSelect('reservation.user', 'user');
   }
 }

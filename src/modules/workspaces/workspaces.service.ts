@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Room, Workspace } from '../../shared/entities/index-entities';
+import { Repository, SelectQueryBuilder } from 'typeorm';
+import { Workspace, Room } from '../../shared/entities/index-entities';
 import { CreateWorkspaceDto } from '../../shared/dtos/index-dtos';
 
 @Injectable()
@@ -19,16 +19,20 @@ export class WorkspaceService {
   }
 
   async findAll(): Promise<Workspace[]> {
-    return await this.workspaceRepository.find({ relations: ['reservations'] });
+    const queryBuilder =
+      this.workspaceRepository.createQueryBuilder('workspace');
+    this.addRelationsToQueryBuilder(queryBuilder);
+    return await queryBuilder.getMany();
   }
 
   async findOne(id: number): Promise<Workspace> {
-    const workspace = await this.workspaceRepository.findOne({
-      where: { id },
-      relations: ['reservations'],
-    });
+    const queryBuilder =
+      this.workspaceRepository.createQueryBuilder('workspace');
+    this.addRelationsToQueryBuilder(queryBuilder);
+    queryBuilder.where('workspace.id = :id', { id });
+    const workspace = await queryBuilder.getOne();
     if (!workspace) {
-      throw new NotFoundException(`Workspace's id ${id} is not found`);
+      throw new NotFoundException(`Workspace's ID ${id} not found`);
     }
     return workspace;
   }
@@ -42,7 +46,7 @@ export class WorkspaceService {
       ...updateWorkspaceDto,
     });
     if (!workspace) {
-      throw new NotFoundException(`Workspace's id ${id} is not found`);
+      throw new NotFoundException(`Workspace's ID ${id} not found`);
     }
     return await this.workspaceRepository.save(workspace);
   }
@@ -50,7 +54,7 @@ export class WorkspaceService {
   async remove(id: number): Promise<void> {
     const workspace = await this.workspaceRepository.findOne({ where: { id } });
     if (!workspace) {
-      throw new NotFoundException(`Workspace's id ${id} is not found`);
+      throw new NotFoundException(`Workspace's ID ${id} not found`);
     }
     await this.workspaceRepository.softRemove(workspace);
   }
@@ -63,15 +67,22 @@ export class WorkspaceService {
       this.workspaceRepository.createQueryBuilder('workspace');
 
     queryBuilder
-      .leftJoin('workspace.reservations', 'reservation')
-      .leftJoin('workspace.room', 'room')
+      .leftJoinAndSelect('workspace.reservations', 'reservation')
+      .leftJoinAndSelect('workspace.room', 'room')
       .where('room.id = :roomId', { roomId })
       .andWhere(
         '(reservation.sessionId IS NULL OR reservation.sessionId != :sessionId)',
         { sessionId },
-      )
-      .andWhere('workspace.room = :roomId', { roomId });
+      );
 
     return await queryBuilder.getMany();
+  }
+
+  private addRelationsToQueryBuilder(
+    queryBuilder: SelectQueryBuilder<Workspace>,
+  ): void {
+    queryBuilder.leftJoinAndSelect('workspace.room', 'room');
+    queryBuilder.leftJoinAndSelect('workspace.user', 'user');
+    queryBuilder.leftJoinAndSelect('workspace.session', 'session');
   }
 }
