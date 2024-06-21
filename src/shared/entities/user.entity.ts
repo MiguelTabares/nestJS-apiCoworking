@@ -14,16 +14,16 @@ export class User {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ nullable: true })
+  @Column()
   fullname: string;
 
-  @Column({ nullable: true })
+  @Column()
   email: string;
 
-  @Column({ nullable: true })
+  @Column()
   company: string;
 
-  @Column({ nullable: true })
+  @Column()
   identificationNumber: number;
 
   @CreateDateColumn()

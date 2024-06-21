@@ -1,26 +1,55 @@
-import { Injectable } from '@nestjs/common';
-import { CreateSessionDto } from '../shared/dtos/sessions/create-session.dto';
-import { UpdateSessionDto } from '../shared/dtos/sessions/update-session.dto';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Session } from '../../shared/entities/index-entities';
+import { CreateSessionDto } from '../../shared/dtos/index-dtos';
 
 @Injectable()
-export class SessionsService {
-  create(createSessionDto: CreateSessionDto) {
-    return 'This action adds a new session';
+export class SessionService {
+  constructor(
+    @InjectRepository(Session)
+    private readonly sessionRepository: Repository<Session>,
+  ) {}
+
+  async create(createSessionDto: CreateSessionDto): Promise<Session> {
+    const session = this.sessionRepository.create(createSessionDto);
+    return await this.sessionRepository.save(session);
   }
 
-  findAll() {
-    return `This action returns all sessions`;
+  async findAll(): Promise<Session[]> {
+    return await this.sessionRepository.find({ relations: ['reservations'] });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} session`;
+  async findOne(id: number): Promise<Session> {
+    const session = await this.sessionRepository.findOne({
+      where: { id },
+      relations: ['reservations'],
+    });
+    if (!session) {
+      throw new NotFoundException(`Session's ID ${id} not found`);
+    }
+    return session;
   }
 
-  update(id: number, updateSessionDto: UpdateSessionDto) {
-    return `This action updates a #${id} session`;
+  async update(
+    id: number,
+    updateSessionDto: CreateSessionDto,
+  ): Promise<Session> {
+    const session = await this.sessionRepository.preload({
+      id,
+      ...updateSessionDto,
+    });
+    if (!session) {
+      throw new NotFoundException(`Session's ID ${id} not found`);
+    }
+    return await this.sessionRepository.save(session);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} session`;
+  async remove(id: number): Promise<void> {
+    const session = await this.sessionRepository.findOne({ where: { id } });
+    if (!session) {
+      throw new NotFoundException(`Session's ID ${id} not found`);
+    }
+    await this.sessionRepository.softRemove(session);
   }
 }

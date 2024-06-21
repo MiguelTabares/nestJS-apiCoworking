@@ -10,5 +10,5 @@ export class CreateWorkspaceDto {
   column: number;
 
   @IsNotEmpty()
-  roomId: number; // Este campo se utilizará para asociar el espacio de trabajo a una habitación (Room)
+  roomId: number;
 }
