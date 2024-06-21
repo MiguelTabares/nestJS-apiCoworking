@@ -8,7 +8,8 @@ import {
   OneToMany,
   ManyToOne,
 } from 'typeorm';
-import { Reservation, Room } from './index-entities';
+import { Reservation } from './reservation.entity';
+import { Room } from './room.entity';
 
 @Entity()
 export class Workspace {
@@ -21,6 +22,12 @@ export class Workspace {
   @Column()
   column: number;
 
+  @ManyToOne(() => Room, (room) => room.workspaces)
+  room: Room;
+
+  @OneToMany(() => Reservation, (reservation) => reservation.workspace)
+  reservations: Reservation[];
+
   @CreateDateColumn()
   createdAt: Date;
 
@@ -29,10 +36,4 @@ export class Workspace {
 
   @DeleteDateColumn({ nullable: true })
   deletedAt: Date;
-
-  @OneToMany(() => Reservation, (reservation) => reservation.workspace)
-  reservations: Reservation[];
-
-  @ManyToOne(() => Room, (room) => room.workspaces)
-  room: Room;
 }

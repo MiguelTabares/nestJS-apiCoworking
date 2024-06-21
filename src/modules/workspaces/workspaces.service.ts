@@ -52,4 +52,18 @@ export class WorkspaceService {
     }
     await this.workspaceRepository.softRemove(workspace);
   }
+
+  async findAvailableWorkspaces(
+    roomId: number,
+    sessionId: number,
+  ): Promise<Workspace[]> {
+    const queryBuilder = this.workspaceRepository
+      .createQueryBuilder('workspace')
+      .leftJoin('workspace.reservations', 'reservation')
+      .where('reservation.room.id = :roomId', { roomId })
+      .andWhere('reservation.session.id = :sessionId', { sessionId })
+      .andWhere('reservation.deletedAt IS NULL');
+
+    return await queryBuilder.getMany();
+  }
 }
