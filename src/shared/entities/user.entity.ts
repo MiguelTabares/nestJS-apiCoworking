@@ -7,7 +7,7 @@ import {
   DeleteDateColumn,
   OneToMany,
 } from 'typeorm';
-import { Reservation } from './index-entities';
+import { Reservation, Workspace } from './index-entities';
 
 @Entity()
 export class User {
@@ -37,4 +37,7 @@ export class User {
 
   @OneToMany(() => Reservation, (reservation) => reservation.user)
   reservations: Reservation[];
+
+  @OneToMany(() => Workspace, (workspace) => workspace.user)
+  workspaces: Workspace[];
 }

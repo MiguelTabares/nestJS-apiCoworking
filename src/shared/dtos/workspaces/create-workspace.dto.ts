@@ -11,4 +11,7 @@ export class CreateWorkspaceDto {
 
   @IsNotEmpty()
   roomId: number;
+
+  @IsNotEmpty()
+  userId: number;
 }

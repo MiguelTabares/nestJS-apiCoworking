@@ -6,7 +6,8 @@ import { RoomsModule } from './modules/rooms/rooms.module';
 import { SessionsModule } from './modules/sessions/sessions.module';
 import { UsersModule } from './modules/users/users.module';
 import { WorkspacesModule } from './modules/workspaces/workspaces.module';
-import { RoomsSessionsModule } from './modules/rooms-sessions/rooms-sessions.module';
+import { SessionsWorkspacesModule } from './modules/sessions-workspaces/sessions-workspaces.module';
+import { UsersWorkspacesModule } from './modules/users-workspaces/users-workspaces.module';
 import { RoomsSessionsModule } from './modules/rooms-sessions/rooms-sessions.module';
 import dbConfig from './db-config/dbConfig';
 
@@ -35,6 +36,8 @@ import dbConfig from './db-config/dbConfig';
     UsersModule,
     WorkspacesModule,
     RoomsSessionsModule,
+    UsersWorkspacesModule,
+    SessionsWorkspacesModule,
   ],
   controllers: [],
   providers: [],

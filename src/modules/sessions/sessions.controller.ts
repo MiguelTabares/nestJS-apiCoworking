@@ -42,4 +42,14 @@ export class SessionController {
   remove(@Param('id') id: number): Promise<void> {
     return this.sessionService.remove(id);
   }
+
+  @Get('most-booked')
+  async getMostBookedSessions() {
+    return this.sessionService.getMostBookedSessions();
+  }
+
+  @Get('most-available')
+  async getMostAvailableSessions() {
+    return this.sessionService.getMostAvailableSessions();
+  }
 }

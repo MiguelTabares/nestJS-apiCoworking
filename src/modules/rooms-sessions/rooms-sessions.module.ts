@@ -5,10 +5,11 @@ import { RoomsSessionsService } from './rooms-sessions.service';
 import { Room } from '../../shared/entities/room.entity';
 import { Session } from '../../shared/entities/session.entity';
 import { Workspace } from '../../shared/entities/workspace.entity';
+import { WorkspaceService } from '../workspaces/workspaces.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Room, Session, Workspace])],
   controllers: [RoomsSessionsController],
-  providers: [RoomsSessionsService],
+  providers: [RoomsSessionsService, WorkspaceService],
 })
 export class RoomsSessionsModule {}

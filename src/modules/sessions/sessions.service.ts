@@ -52,4 +52,32 @@ export class SessionService {
     }
     await this.sessionRepository.softRemove(session);
   }
+
+  async getMostBookedSessions(): Promise<Session[]> {
+    const queryBuilder = this.sessionRepository.createQueryBuilder('session');
+
+    queryBuilder
+      .loadRelationCountAndMap(
+        'session.reservationsCount',
+        'session.reservations',
+      )
+      .orderBy('session.reservationsCount', 'DESC');
+
+    return await queryBuilder.getMany();
+  }
+
+  async getMostAvailableSessions(): Promise<Session[]> {
+    const queryBuilder = this.sessionRepository.createQueryBuilder('session');
+
+    queryBuilder
+      .leftJoin('session.reservations', 'reservation')
+      .groupBy('session.id')
+      .orderBy(
+        'COUNT(CASE WHEN reservation.deletedAt IS NULL THEN reservation.id END)',
+        'ASC',
+      )
+      .getMany();
+
+    return await queryBuilder.getMany();
+  }
 }

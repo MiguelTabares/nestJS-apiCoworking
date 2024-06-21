@@ -3,8 +3,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Workspace } from '../../shared/entities/index-entities';
 import { WorkspaceService } from './workspaces.service';
 import { WorkspaceController } from './workspaces.controller';
-import { Room } from '../../shared/entities/room.entity'; // Importa la entidad Room si Workspace está relacionado con ella
-import { Reservation } from '../../shared/entities/reservation.entity'; // Importa la entidad Reservation si Workspace está relacionado con ella
+import { Room } from '../../shared/entities/room.entity';
+import { Reservation } from '../../shared/entities/reservation.entity';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Workspace, Room, Reservation])],
