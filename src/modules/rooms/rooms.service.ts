@@ -1,26 +1,52 @@
-import { Injectable } from '@nestjs/common';
-import { CreateRoomDto } from '../../shared/dtos/rooms/create-room.dto';
-import { UpdateRoomDto } from '../../shared/dtos/rooms/update-room.dto';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Room } from '../../shared/entities/index-entities';
+import { CreateRoomDto } from '../../shared/dtos/index-dtos';
 
 @Injectable()
-export class RoomsService {
-  create(createRoomDto: CreateRoomDto) {
-    return 'This action adds a new room';
+export class RoomService {
+  constructor(
+    @InjectRepository(Room)
+    private readonly roomRepository: Repository<Room>,
+  ) {}
+
+  async create(createRoomDto: CreateRoomDto): Promise<Room> {
+    const room = this.roomRepository.create(createRoomDto);
+    return await this.roomRepository.save(room);
   }
 
-  findAll() {
-    return `This action returns all rooms`;
+  async findAll(): Promise<Room[]> {
+    return await this.roomRepository.find({ relations: ['workspaces'] });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} room`;
+  async findOne(id: number): Promise<Room> {
+    const room = await this.roomRepository.findOne({
+      where: { id },
+      relations: ['workspaces'],
+    });
+    if (!room) {
+      throw new NotFoundException(`Room's ID ${id} not found`);
+    }
+    return room;
   }
 
-  update(id: number, updateRoomDto: UpdateRoomDto) {
-    return `This action updates a #${id} room`;
+  async update(id: number, updateRoomDto: CreateRoomDto): Promise<Room> {
+    const room = await this.roomRepository.preload({
+      id,
+      ...updateRoomDto,
+    });
+    if (!room) {
+      throw new NotFoundException(`Room's ID ${id} not found`);
+    }
+    return await this.roomRepository.save(room);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} room`;
+  async remove(id: number): Promise<void> {
+    const room = await this.roomRepository.findOne({ where: { id } });
+    if (!room) {
+      throw new NotFoundException(`Room's ID ${id} not found`);
+    }
+    await this.roomRepository.softRemove(room);
   }
 }

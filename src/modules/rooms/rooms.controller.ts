@@ -3,40 +3,43 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Param,
+  Patch,
   Delete,
 } from '@nestjs/common';
-import { RoomsService } from './rooms.service';
-import { CreateRoomDto } from '../../shared/dtos/rooms/create-room.dto';
-import { UpdateRoomDto } from '../../shared/dtos/rooms/update-room.dto';
+import { RoomService } from './rooms.service';
+import { CreateRoomDto } from '../../shared/dtos/index-dtos';
+import { Room } from '../../shared/entities/index-entities';
 
 @Controller('rooms')
-export class RoomsController {
-  constructor(private readonly roomsService: RoomsService) {}
+export class RoomController {
+  constructor(private readonly roomService: RoomService) {}
 
   @Post()
-  create(@Body() createRoomDto: CreateRoomDto) {
-    return this.roomsService.create(createRoomDto);
+  create(@Body() createRoomDto: CreateRoomDto): Promise<Room> {
+    return this.roomService.create(createRoomDto);
   }
 
   @Get()
-  findAll() {
-    return this.roomsService.findAll();
+  findAll(): Promise<Room[]> {
+    return this.roomService.findAll();
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.roomsService.findOne(+id);
+  findOne(@Param('id') id: number): Promise<Room> {
+    return this.roomService.findOne(id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateRoomDto: UpdateRoomDto) {
-    return this.roomsService.update(+id, updateRoomDto);
+  update(
+    @Param('id') id: number,
+    @Body() updateRoomDto: CreateRoomDto,
+  ): Promise<Room> {
+    return this.roomService.update(id, updateRoomDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.roomsService.remove(+id);
+  remove(@Param('id') id: number): Promise<void> {
+    return this.roomService.remove(id);
   }
 }
