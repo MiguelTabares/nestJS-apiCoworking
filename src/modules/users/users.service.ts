@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, SelectQueryBuilder } from 'typeorm';
+import { Repository } from 'typeorm';
 import { User } from '../../shared/entities/index-entities';
 import { CreateUserDto } from '../../shared/dtos/index-dtos';
 
@@ -17,18 +17,13 @@ export class UserService {
   }
 
   async findAll(): Promise<User[]> {
-    const queryBuilder = this.userRepository.createQueryBuilder('user');
-    this.addRelationsToQueryBuilder(queryBuilder);
-    return await queryBuilder.getMany();
+    return this.userRepository.find();
   }
 
   async findOne(id: number): Promise<User> {
-    const queryBuilder = this.userRepository.createQueryBuilder('user');
-    this.addRelationsToQueryBuilder(queryBuilder);
-    queryBuilder.where('user.id = :id', { id });
-    const user = await queryBuilder.getOne();
+    const user = await this.userRepository.findOne({ where: { id } });
     if (!user) {
-      throw new NotFoundException(`User's' ID ${id} not found`);
+      throw new NotFoundException(`User with ID ${id} not found`);
     }
     return user;
   }
@@ -50,12 +45,5 @@ export class UserService {
       throw new NotFoundException(`User's' ID ${id} not found`);
     }
     await this.userRepository.softRemove(user);
-  }
-
-  private addRelationsToQueryBuilder(
-    queryBuilder: SelectQueryBuilder<User>,
-  ): void {
-    queryBuilder.leftJoinAndSelect('user.reservations', 'reservation');
-    queryBuilder.leftJoinAndSelect('user.workspaces', 'workspace');
   }
 }

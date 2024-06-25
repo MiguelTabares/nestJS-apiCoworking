@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, SelectQueryBuilder } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Workspace, Room } from '../../shared/entities/index-entities';
 import { CreateWorkspaceDto } from '../../shared/dtos/index-dtos';
 
@@ -19,18 +19,11 @@ export class WorkspaceService {
   }
 
   async findAll(): Promise<Workspace[]> {
-    const queryBuilder =
-      this.workspaceRepository.createQueryBuilder('workspace');
-    this.addRelationsToQueryBuilder(queryBuilder);
-    return await queryBuilder.getMany();
+    return this.workspaceRepository.find();
   }
 
   async findOne(id: number): Promise<Workspace> {
-    const queryBuilder =
-      this.workspaceRepository.createQueryBuilder('workspace');
-    this.addRelationsToQueryBuilder(queryBuilder);
-    queryBuilder.where('workspace.id = :id', { id });
-    const workspace = await queryBuilder.getOne();
+    const workspace = await this.workspaceRepository.findOne({ where: { id } });
     if (!workspace) {
       throw new NotFoundException(`Workspace's ID ${id} not found`);
     }
@@ -59,30 +52,30 @@ export class WorkspaceService {
     await this.workspaceRepository.softRemove(workspace);
   }
 
-  async findAvailableWorkspaces(
-    roomId: number,
-    sessionId: number,
-  ): Promise<Workspace[]> {
-    const queryBuilder =
-      this.workspaceRepository.createQueryBuilder('workspace');
+  // async findAvailableWorkspaces(
+  //   roomId: number,
+  //   sessionId: number,
+  // ): Promise<Workspace[]> {
+  //   const queryBuilder =
+  //     this.workspaceRepository.createQueryBuilder('workspace');
 
-    queryBuilder
-      .leftJoinAndSelect('workspace.reservations', 'reservation')
-      .leftJoinAndSelect('workspace.room', 'room')
-      .where('room.id = :roomId', { roomId })
-      .andWhere(
-        '(reservation.sessionId IS NULL OR reservation.sessionId != :sessionId)',
-        { sessionId },
-      );
+  //   queryBuilder
+  //     .leftJoinAndSelect('workspace.reservations', 'reservation')
+  //     .leftJoinAndSelect('workspace.room', 'room')
+  //     .where('room.id = :roomId', { roomId })
+  //     .andWhere(
+  //       '(reservation.sessionId IS NULL OR reservation.sessionId != :sessionId)',
+  //       { sessionId },
+  //     );
 
-    return await queryBuilder.getMany();
-  }
+  //   return await queryBuilder.getMany();
+  // }
 
-  private addRelationsToQueryBuilder(
-    queryBuilder: SelectQueryBuilder<Workspace>,
-  ): void {
-    queryBuilder.leftJoinAndSelect('workspace.room', 'room');
-    queryBuilder.leftJoinAndSelect('workspace.user', 'user');
-    queryBuilder.leftJoinAndSelect('workspace.session', 'session');
-  }
+  // private addRelationsToQueryBuilder(
+  //   queryBuilder: SelectQueryBuilder<Workspace>,
+  // ): void {
+  //   queryBuilder.leftJoinAndSelect('workspace.room', 'room');
+  //   queryBuilder.leftJoinAndSelect('workspace.user', 'user');
+  //   queryBuilder.leftJoinAndSelect('workspace.session', 'session');
+  // }
 }

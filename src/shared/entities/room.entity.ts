@@ -9,7 +9,7 @@ import {
 } from 'typeorm';
 import { Workspace } from './index-entities';
 
-@Entity()
+@Entity({ schema: 'coworking', name: 'room' })
 export class Room {
   @PrimaryGeneratedColumn()
   id: number;

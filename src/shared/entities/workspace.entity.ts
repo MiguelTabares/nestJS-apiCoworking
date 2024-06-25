@@ -7,13 +7,12 @@ import {
   DeleteDateColumn,
   OneToMany,
   ManyToOne,
+  JoinColumn,
 } from 'typeorm';
 import { Reservation } from './reservation.entity';
 import { Room } from './room.entity';
-import { User } from './user.entity';
-import { Session } from './session.entity';
 
-@Entity()
+@Entity({ schema: 'coworking', name: 'workspace' })
 export class Workspace {
   @PrimaryGeneratedColumn()
   id: number;
@@ -25,13 +24,8 @@ export class Workspace {
   column: number;
 
   @ManyToOne(() => Room, (room) => room.workspaces)
+  @JoinColumn({ name: 'room_id' })
   room: Room;
-
-  @ManyToOne(() => User, (user) => user.workspaces)
-  user: User;
-
-  @ManyToOne(() => Session, (session) => session.workspaces)
-  session: Session;
 
   @OneToMany(() => Reservation, (reservation) => reservation.workspace)
   reservations: Reservation[];
@@ -44,4 +38,5 @@ export class Workspace {
 
   @DeleteDateColumn({ nullable: true })
   deletedAt: Date;
+  session: any;
 }

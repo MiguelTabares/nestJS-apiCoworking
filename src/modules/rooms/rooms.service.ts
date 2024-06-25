@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, SelectQueryBuilder } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Room } from '../../shared/entities/index-entities';
 import { CreateRoomDto } from '../../shared/dtos/index-dtos';
 
@@ -17,16 +17,11 @@ export class RoomService {
   }
 
   async findAll(): Promise<Room[]> {
-    const queryBuilder = this.roomRepository.createQueryBuilder('room');
-    this.addRelationsToQueryBuilder(queryBuilder);
-    return await queryBuilder.getMany();
+    return this.roomRepository.find();
   }
 
   async findOne(id: number): Promise<Room> {
-    const queryBuilder = this.roomRepository.createQueryBuilder('room');
-    this.addRelationsToQueryBuilder(queryBuilder);
-    queryBuilder.where('room.id = :id', { id });
-    const room = await queryBuilder.getOne();
+    const room = await this.roomRepository.findOne({ where: { id } });
     if (!room) {
       throw new NotFoundException(`Room's ID ${id} not found`);
     }
@@ -50,11 +45,5 @@ export class RoomService {
       throw new NotFoundException(`Room's ID ${id} not found`);
     }
     await this.roomRepository.softRemove(room);
-  }
-
-  private addRelationsToQueryBuilder(
-    queryBuilder: SelectQueryBuilder<Room>,
-  ): void {
-    queryBuilder.leftJoinAndSelect('room.workspaces', 'workspace');
   }
 }

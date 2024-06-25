@@ -6,10 +6,14 @@ import { RoomsModule } from './modules/rooms/rooms.module';
 import { SessionsModule } from './modules/sessions/sessions.module';
 import { UsersModule } from './modules/users/users.module';
 import { WorkspacesModule } from './modules/workspaces/workspaces.module';
-import { SessionsWorkspacesModule } from './modules/sessions-workspaces/sessions-workspaces.module';
-import { UsersWorkspacesModule } from './modules/users-workspaces/users-workspaces.module';
-import { RoomsSessionsModule } from './modules/rooms-sessions/rooms-sessions.module';
 import dbConfig from './db-config/dbConfig';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import {
+  Workspace,
+  Reservation,
+  Session,
+} from './shared/entities/index-entities';
 
 @Module({
   imports: [
@@ -17,6 +21,7 @@ import dbConfig from './db-config/dbConfig';
       envFilePath: '.env',
       isGlobal: true,
     }),
+    TypeOrmModule.forFeature([Workspace, Reservation, Session]),
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: dbConfig().database.host,
@@ -35,11 +40,8 @@ import dbConfig from './db-config/dbConfig';
     SessionsModule,
     UsersModule,
     WorkspacesModule,
-    RoomsSessionsModule,
-    UsersWorkspacesModule,
-    SessionsWorkspacesModule,
   ],
-  controllers: [],
-  providers: [],
+  controllers: [AppController],
+  providers: [AppService],
 })
 export class AppModule {}

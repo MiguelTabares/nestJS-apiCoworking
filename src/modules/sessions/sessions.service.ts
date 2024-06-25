@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, SelectQueryBuilder } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Session } from '../../shared/entities/index-entities';
 import { CreateSessionDto } from '../../shared/dtos/index-dtos';
 
@@ -17,18 +17,13 @@ export class SessionService {
   }
 
   async findAll(): Promise<Session[]> {
-    const queryBuilder = this.sessionRepository.createQueryBuilder('session');
-    this.addRelationsToQueryBuilder(queryBuilder);
-    return await queryBuilder.getMany();
+    return this.sessionRepository.find();
   }
 
   async findOne(id: number): Promise<Session> {
-    const queryBuilder = this.sessionRepository.createQueryBuilder('session');
-    this.addRelationsToQueryBuilder(queryBuilder);
-    queryBuilder.where('session.id = :id', { id });
-    const session = await queryBuilder.getOne();
+    const session = await this.sessionRepository.findOne({ where: { id } });
     if (!session) {
-      throw new NotFoundException(`Session's ID ${id} not found`);
+      throw new NotFoundException(`Session with ID ${id} not found`);
     }
     return session;
   }
@@ -55,37 +50,37 @@ export class SessionService {
     await this.sessionRepository.softRemove(session);
   }
 
-  async getMostBookedSessions(): Promise<any> {
-    const queryBuilder = this.sessionRepository.createQueryBuilder('session');
+  // async getMostBookedSessions(): Promise<any> {
+  //   const queryBuilder = this.sessionRepository.createQueryBuilder('session');
 
-    queryBuilder
-      .leftJoin('session.reservations', 'reservation')
-      .addSelect('session.id', 'sessionId')
-      .addSelect('COUNT(reservation.id)', 'reservationscount')
-      .groupBy('session.id')
-      .orderBy('reservationscount', 'DESC');
+  //   queryBuilder
+  //     .leftJoin('session.reservations', 'reservation')
+  //     .addSelect('session.id', 'sessionId')
+  //     .addSelect('COUNT(reservation.id)', 'reservationscount')
+  //     .groupBy('session.id')
+  //     .orderBy('reservationscount', 'DESC');
 
-    return await queryBuilder.getRawMany();
-  }
+  //   return await queryBuilder.getRawMany();
+  // }
 
-  async getMostAvailableSessions(): Promise<Session[]> {
-    const queryBuilder = this.sessionRepository.createQueryBuilder('session');
+  // async getMostAvailableSessions(): Promise<Session[]> {
+  //   const queryBuilder = this.sessionRepository.createQueryBuilder('session');
 
-    queryBuilder
-      .leftJoin('session.reservations', 'reservation')
-      .groupBy('session.id')
-      .orderBy(
-        'COUNT(CASE WHEN reservation.deletedAt IS NULL THEN reservation.id END)',
-        'ASC',
-      );
+  //   queryBuilder
+  //     .leftJoin('session.reservations', 'reservation')
+  //     .groupBy('session.id')
+  //     .orderBy(
+  //       'COUNT(CASE WHEN reservation.deletedAt IS NULL THEN reservation.id END)',
+  //       'ASC',
+  //     );
 
-    return await queryBuilder.getMany();
-  }
+  //   return await queryBuilder.getMany();
+  // }
 
-  private addRelationsToQueryBuilder(
-    queryBuilder: SelectQueryBuilder<Session>,
-  ): void {
-    queryBuilder.leftJoinAndSelect('session.reservations', 'reservation');
-    queryBuilder.leftJoinAndSelect('session.workspaces', 'workspace');
-  }
+  // private addRelationsToQueryBuilder(
+  //   queryBuilder: SelectQueryBuilder<Session>,
+  // ): void {
+  //   queryBuilder.leftJoinAndSelect('session.reservations', 'reservation');
+  //   queryBuilder.leftJoinAndSelect('session.workspaces', 'workspace');
+  // }
 }
