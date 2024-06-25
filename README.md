@@ -1,5 +1,8 @@
 <p align="center"><a href="http://nodejs.org" target="_blank"></a>Link del despliegue: https://nest-js-api-coworking-2wj50a3dg-miguel-tabares-projects.vercel.app/
- </p>
+ Pasos: 
+1. Pegar link en Postman en un Environment nuevo, configurar como HOST y guardar.
+2. En la colección con los endpoints, activar el environment recién guardado.
+3. Ejecutar el endpoint que deberá cargar tal como si se iniciara la aplicación con la sentencia npm run start:dev desde la terminal</p>
 
 <p align="center"><a href="http://nodejs.org" target="_blank"></a>Swagger: http://localhost:3000/api
  </p>
